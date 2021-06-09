@@ -249,354 +249,370 @@ function todaysLessons(events, client) {
 
         } else {
             fooEmbed.addFields({
-                    name: "day",
-                    value: events[entry].day,
-                    inline: true
-                }, {
-                    name: "Fach",
-                    value: events[entry].summary,
-                    inline: true
-                }, {
-                    name: "eventStart",
-                    value: events[entry].start,
-                    inline: true
-                })
-            }
-
+                name: "day",
+                value: events[entry].day,
+                inline: true
+            }, {
+                name: "Fach",
+                value: events[entry].summary,
+                inline: true
+            }, {
+                name: "eventStart",
+                value: events[entry].start,
+                inline: true
+            })
         }
 
-        return fooEmbed;
+    }
+
+    return fooEmbed;
 }
 
 
 
-    function convertDate(eventStart) {
-        //This works, because the DATE.toString() already converts to Date Object in the propper Timezone
-        //All this function does, is take the parameters and sets a new date object based on these parameters
-        var convertedDate;
-        var eventStartString = eventStart.toString();
+function convertDate(eventStart) {
+    //This works, because the DATE.toString() already converts to Date Object in the propper Timezone
+    //All this function does, is take the parameters and sets a new date object based on these parameters
+    var convertedDate;
+    var eventStartString = eventStart.toString();
 
-        var eventYear = eventStartString.slice(11, 15); //11 = startOfYearIndex, 15 = endOfYearIndex
-        var enventMonth = monthToIndex(eventStartString.slice(4, 7)) //4 = startOfMonthIndex, 7 = endOfMonthIndex
-        var eventDay = eventStartString.slice(8, 10); //8 = startOfDayIndex, 10 = endOfDayIndex
-        var eventHours = eventStartString.slice(16, 18); //16 = startOfHourIndex, 10 = endOfHourIndex
-        var eventMinutes = eventStartString.slice(19, 21); //8 = startOfMinuteIndex, 10 = endOfMinuteIndex
+    var eventYear = eventStartString.slice(11, 15); //11 = startOfYearIndex, 15 = endOfYearIndex
+    var enventMonth = monthToIndex(eventStartString.slice(4, 7)) //4 = startOfMonthIndex, 7 = endOfMonthIndex
+    var eventDay = eventStartString.slice(8, 10); //8 = startOfDayIndex, 10 = endOfDayIndex
+    var eventHours = eventStartString.slice(16, 18); //16 = startOfHourIndex, 10 = endOfHourIndex
+    var eventMinutes = eventStartString.slice(19, 21); //8 = startOfMinuteIndex, 10 = endOfMinuteIndex
 
-        return convertedDate = new Date(eventYear, enventMonth, eventDay, eventHours, eventMinutes);
+    return convertedDate = new Date(eventYear, enventMonth, eventDay, eventHours, eventMinutes);
+}
+
+
+function monthToIndex(month) {
+
+    var months = {
+        "Jan": "0",
+        "Feb": "1",
+        "Mar": "2",
+        "Apr": "3",
+        "May": "4",
+        "Jun": "5",
+        "Jul": "6",
+        "Aug": "7",
+        "Sep": "8",
+        "Okt": "9",
+        "Nov": "10",
+        "Dec": "11"
     }
 
+    return months[month];
+}
 
-    function monthToIndex(month) {
+function addEntryToWeeksEvents(events, day, start, summary, description) {
 
-        var months = {
-            "Jan": "0",
-            "Feb": "1",
-            "Mar": "2",
-            "Apr": "3",
-            "May": "4",
-            "Jun": "5",
-            "Jul": "6",
-            "Aug": "7",
-            "Sep": "8",
-            "Okt": "9",
-            "Nov": "10",
-            "Dec": "11"
-        }
-
-        return months[month];
+    events[Object.keys(events).length] = {
+        "day": day,
+        "start": start,
+        "summary": summary,
+        "description": description
     }
 
-    function addEntryToWeeksEvents(events, day, start, summary, description) {
+    return events
 
-        events[Object.keys(events).length] = {
-            "day": day,
-            "start": start,
-            "summary": summary,
-            "description": description
-        }
+}
 
-        return events
+function amountOfDaysDifference(dateToday, dateToCheck) {
 
-    }
+    var milisecondsInOneMinute = 1000;
+    var minutesInOneHour = 3600;
+    var hoursInOneDay = 24;
+    var timediff = Math.abs(dateToCheck - dateToday.getTime());
+    var diffDays = Math.ceil(timediff / (milisecondsInOneMinute * minutesInOneHour * hoursInOneDay));
 
-    function amountOfDaysDifference(dateToday, dateToCheck) {
+    return diffDays;
 
-        var milisecondsInOneMinute = 1000;
-        var minutesInOneHour = 3600;
-        var hoursInOneDay = 24;
-        var timediff = Math.abs(dateToCheck - dateToday.getTime());
-        var diffDays = Math.ceil(timediff / (milisecondsInOneMinute * minutesInOneHour * hoursInOneDay));
+}
 
-        return diffDays;
+async function filterToadaysEvents(client, today, thisWeeksEvents) {
 
-    }
+    for (entry in thisWeeksEvents) {
 
-    async function filterToadaysEvents(client, today, thisWeeksEvents) {
+        if (thisWeeksEvents[entry].day == today.getDay()) {
 
-        for (entry in thisWeeksEvents) {
+            var event = thisWeeksEvents[entry];
+            var summary = event.summary;
+            //extract the subject after the "-" in the string
+            var subject = summary.split('-')[1];
 
-            if (thisWeeksEvents[entry].day == today.getDay()) {
+            //extract the professors Name before the "-" in the string 
+            var professor = summary.split('-')[0];
 
-                var event = thisWeeksEvents[entry];
-                var summary = event.summary;
-                //extract the subject after the "-" in the string
-                var subject = summary.split('-')[1];
+            var link = extractZoomLinks(event.description);
 
-                //extract the professors Name before the "-" in the string 
-                var professor = summary.split('-')[0];
+            var time = event.start;
 
-                var link = extractZoomLinks(event.description);
+            var cronDate = dateToCron(time, today.getDay(), event.description);
 
-                var time = event.start;
+            var role = findRole(subject, config.ids.roleIDS)
 
-                var cronDate = dateToCron(time, today.getDay());
+            var embed = dynamicEmbed(client, role, subject, professor, link)
 
-                var role = findRole(subject, config.ids.roleIDS)
-
-                var embed = dynamicEmbed(client, role, subject, professor, link)
-
-                var channel = findChannel(subject, config.ids.channelIDS.subject)
+            var channel = findChannel(subject, config.ids.channelIDS.subject)
 
 
-                if (channel == undefined) {
+            if (channel == undefined) {
 
-                    channel = config.ids.channelIDs.generalChannels.general;
-
-                }
-
-                if (noVariableUndefined(cronDate, channel, role, embed, client)) {
-
-                    role = ("<@&" + role + ">")
-
-
-                } else if (role == undefined) {
-
-                    role = "";
-
-                }
-
-                createCron(cronDate, channel, role, embed, link, client);
+                channel = config.ids.channelIDs.generalChannels.general;
 
             }
 
-        }
+            if (noVariableUndefined(cronDate, channel, role, embed, client)) {
 
-    }
+                role = ("<@&" + role + ">")
 
 
-    /**
-     * extracts the zoom Links from HTML tag
-     * if the HTML tag contains "#success" it cuts the string before that string, to make the link automatically open zoom 
-     * @param {*} description 
-     * @returns link
-     */
-    function extractZoomLinks(description) {
+            } else if (role == undefined) {
 
-        if (description.length == 0) {
+                role = "";
 
-            return
+            }
 
-        }
-
-        let splitString = '>'
-
-        //check for 'id' , because some links might contain an id parameter, which is not needed
-        if (description.includes('id')) {
-
-            splitString = 'id'
-
-        }
-        //check for '#success' , because some links might have been copied wrong
-        if (description.includes('#success')) {
-
-            splitString = '#success'
-
-        }
-        //check for html hyperlink parsing , because google calendar does some weird stuff
-        if (description.includes('<a href=')) {
-
-            return description.split('<a href=')[1].split(splitString)[0];
-
-        } else {
-
-            return description;
+            createCron(cronDate, channel, role, embed, link, client);
 
         }
 
     }
 
-    /**
-     * generate all needed variables for the CRON-Format
-     *  
-     * SECONDS MINUTES HOURS DAY_OF_MONTH MONTH DAY_OF_WEEK
-     * 
-     * @param {Date} date 
-     * @returns 
-     */
-    function dateToCron(date, weekDay) {
+}
 
-        var seconds = '0';
-        var minutes = '55';
-        var hour = date.getHours() - 1; //Subtract one, to give the alert not at the exact start of the event, but coupled with minutes = '55' 5 minutes earlier
-        var dayOfMonth = '*'; //set to * so the Cron is for the current week
-        var month = '*'; //set to * so the Cron is for the current week
-        var day = weekDay; //Extracts the weekday of the date string
+
+/**
+ * extracts the zoom Links from HTML tag
+ * if the HTML tag contains "#success" it cuts the string before that string, to make the link automatically open zoom 
+ * @param {*} description 
+ * @returns link
+ */
+function extractZoomLinks(description) {
+
+    if (description.length == 0) {
+
+        return
+
+    }
+
+    let splitString = '>'
+
+    //check for 'id' , because some links might contain an id parameter, which is not needed
+    if (description.includes('id')) {
+
+        splitString = 'id'
+
+    }
+    //check for '#success' , because some links might have been copied wrong
+    if (description.includes('#success')) {
+
+        splitString = '#success'
+
+    }
+    //check for html hyperlink parsing , because google calendar does some weird stuff
+    if (description.includes('<a href=')) {
+
+        return description.split('<a href=')[1].split(splitString)[0];
+
+    } else {
+
+        return description;
+
+    }
+
+}
+
+/**
+ * generate all needed variables for the CRON-Format
+ *  
+ * SECONDS MINUTES HOURS DAY_OF_MONTH MONTH DAY_OF_WEEK
+ * 
+ * @param {Date} date 
+ * @returns 
+ */
+function dateToCron(date, weekDay, description) {
+
+    var seconds = '0';
+    var minutes = '55';
+    var hour = date.getHours() - 1; //Subtract one, to give the alert not at the exact start of the event, but coupled with minutes = '55' 5 minutes earlier
+    var dayOfMonth = '*'; //set to * so the Cron is for the current week
+    var month = '*'; //set to * so the Cron is for the current week
+    var day = weekDay; //Extracts the weekday of the date string
+
+
+    if (description.toLowerCase().includes("(üb)"))
 
         var cronString = seconds + ' ' + minutes + ' ' + hour + ' ' + dayOfMonth + ' ' + month + ' ' + day;
 
-        return cronString;
+    return cronString;
+
+}
+
+/**
+ * Builds dynamic embed
+ * 
+ * Only returns an embed with link, when link is set
+ * 
+ * @param {object} client needed for the client Avatar
+ * @param {string} subject used to set the Title and contents of the embed
+ * @param {string} professor sets the professor
+ * @param {string} link link to the lecture
+ * @returns {any} Embed that was built using the given parameters
+ */
+function dynamicEmbed(client, role, subject, professor, link) {
+
+    var roleColor = client.guilds.resolve(serverID).roles.cache.get(role).color;
+    var courseType = "Vorlesung";
+
+    if (subject.toLowerCase().includes("(ü)")) {
+        courseType = "Übung";
+    }
+    
+    embedDynamic = standardEmbed(client, roleColor, subject, professor, courseType);
+    
+    if (subject.toLowerCase().includes("(üb)")) {
+        embedDynamic.setAuthor(`Übungsblatt Abgabe Reminder`)
+        embedDynamic.setDescription(`Die Abgabefirst des Übungsblattes ist in 30 Minuten.`)
+    }
+
+    if (link) {
+
+        embedDynamic.setURL(link);
 
     }
 
-    /**
-     * Builds dynamic embed
-     * 
-     * Only returns an embed with link, when link is set
-     * 
-     * @param {object} client needed for the client Avatar
-     * @param {string} subject used to set the Title and contents of the embed
-     * @param {string} professor sets the professor
-     * @param {string} link link to the lecture
-     * @returns {any} Embed that was built using the given parameters
-     */
-    function dynamicEmbed(client, role, subject, professor, link) {
+    return embedDynamic;
 
-        var roleColor = client.guilds.resolve(serverID).roles.cache.get(role).color;
-        var courseType = "Vorlesung";
+}
 
-        if (subject.includes("(ü)") || subject.includes("(Ü)")) courseType = "Übung";
+function standardEmbed(client, roleColor, subject, professor, courseType) {
 
-        try {
+    try {
+        var generatedEmbed = new discord.MessageEmbed()
+            .setColor(roleColor)
+            .setAuthor(`${courseType}s Reminder`, client.guilds.resolve(serverID).members.resolve(botUserID).user.avatarURL())
+            .setTitle(subject + ' Reminder')
+            .setDescription(`Die ${courseType} fängt in 5 Minuten an`)
+            .setThumbnail('https://pics.freeicons.io/uploads/icons/png/6029094171580282643-512.png')
+            .addFields({
+                name: 'Dozent',
+                value: professor,
+                inline: false
+            })
+            .setFooter('Powered by: Christoph', client.guilds.resolve(serverID).members.resolve(botUserID).user.avatarURL());
 
-            var embedDynamic = new discord.MessageEmbed()
-                .setColor(roleColor)
-                .setAuthor(`${courseType}s Reminder`, client.guilds.resolve(serverID).members.resolve(botUserID).user.avatarURL())
-                .setTitle(subject + ' Reminder')
-                .setDescription(`Die ${courseType} fängt in 5 Minuten an`)
-                .setThumbnail('https://pics.freeicons.io/uploads/icons/png/6029094171580282643-512.png')
-                .addFields({
-                    name: 'Dozent',
-                    value: professor,
-                    inline: false
+    } catch (e) {
+
+        embed = "There was an error creating the embed";
+        client.channels.cache.get('846069738059988993').send(embed + "\n" + e); //sends login embed to channel
+
+    }
+
+    return generatedEmbed;
+}
+
+/**
+ * returns channelID
+ * 
+ * analyzes the contents of the "subject" and sets "channel" based on its contents
+ * sends in case of an error, said error to the debug channel
+ * 
+ * @param {object} client necessary to return error messages to debug channel
+ * @param {String} subject subject exported from iCal
+ * @return {string}     returns the channelID based on subject
+ * 
+ * @throws Error in debug channel
+ */
+function findChannel(subject, channels) {
+
+    var channel = "";
+
+    Object.keys(channels).forEach(function (key) {
+
+        if (subject.includes(key)) {
+
+            channel = channels[key];
+
+        }
+
+    })
+
+    return channel;
+
+}
+
+function findRole(subject, roles) {
+
+    var role = "";
+
+    Object.keys(roles).forEach(function (key) {
+
+        if (subject.includes(key)) {
+
+            role = roles[key];
+
+        }
+
+    })
+    return role;
+
+}
+
+function noVariableUndefined() {
+
+    for (arg in arguments) {
+
+        if (arguments[arg] == undefined) {
+
+            return false;
+
+        }
+
+    }
+
+    return true;
+
+}
+
+
+
+/**
+ * 
+ * @param {string} cronDate string in Cron format
+ * @param {string} channel destination channel for message
+ * @param {string} role role what is supposed to be pinged
+ * @param {object} embed embed what is sent
+ * @param {object} client required by discord.js
+ */
+function createCron(cronDate, channel, role, embed, link, client) {
+    if (!validUrl.isUri(link)) {
+        var job = schedule.scheduleJob(cronDate, function () {
+            client.channels.cache.get(channel).send(role, embed.setTimestamp())
+                .then(msg => msg.delete({
+                    timeout: 5400000
+                }))
+        });
+    } else {
+        let linkButton = new MessageButton()
+            .setStyle('url')
+            .setLabel('In Zoom öffnen')
+            .setURL(link)
+            .setEmoji('776402157334822964')
+
+        let row = new MessageActionRow()
+            .addComponent(linkButton)
+
+        var job = schedule.scheduleJob(cronDate, function () {
+            client.channels.cache.get(channel).send(role, {
+                    components: [row],
+                    embed: embed.setTimestamp()
                 })
-                .setFooter('Powered by: Christoph', client.guilds.resolve(serverID).members.resolve(botUserID).user.avatarURL());
-
-        } catch (e) {
-
-            embed = "There was an error creating the embed";
-            client.channels.cache.get('770276625040146463').send(embed + "\n" + e); //sends login embed to channel
-
-        }
-
-        if (link) {
-
-            embedDynamic.setURL(link);
-
-        }
-
-        return embedDynamic;
-
+                .then(msg => msg.delete({
+                    timeout: 5400000
+                }))
+        });
     }
-
-    /**
-     * returns channelID
-     * 
-     * analyzes the contents of the "subject" and sets "channel" based on its contents
-     * sends in case of an error, said error to the debug channel
-     * 
-     * @param {object} client necessary to return error messages to debug channel
-     * @param {String} subject subject exported from iCal
-     * @return {string}     returns the channelID based on subject
-     * 
-     * @throws Error in debug channel
-     */
-    function findChannel(subject, channels) {
-
-        var channel = "";
-
-        Object.keys(channels).forEach(function (key) {
-
-            if (subject.includes(key)) {
-
-                channel = channels[key];
-
-            }
-
-        })
-
-        return channel;
-
-    }
-
-    function findRole(subject, roles) {
-
-        var role = "";
-
-        Object.keys(roles).forEach(function (key) {
-
-            if (subject.includes(key)) {
-
-                role = roles[key];
-
-            }
-
-        })
-        return role;
-
-    }
-
-    function noVariableUndefined() {
-
-        for (arg in arguments) {
-
-            if (arguments[arg] == undefined) {
-
-                return false;
-
-            }
-
-        }
-
-        return true;
-
-    }
-
-
-
-    /**
-     * 
-     * @param {string} cronDate string in Cron format
-     * @param {string} channel destination channel for message
-     * @param {string} role role what is supposed to be pinged
-     * @param {object} embed embed what is sent
-     * @param {object} client required by discord.js
-     */
-    function createCron(cronDate, channel, role, embed, link, client) {
-        if (!validUrl.isUri(link)) {
-            var job = schedule.scheduleJob(cronDate, function () {
-                client.channels.cache.get(channel).send(role, embed.setTimestamp())
-                    .then(msg => msg.delete({
-                        timeout: 5400000
-                    }))
-            });
-        } else {
-            let linkButton = new MessageButton()
-                .setStyle('url')
-                .setLabel('In Zoom öffnen')
-                .setURL(link)
-                .setEmoji('776402157334822964')
-
-            let row = new MessageActionRow()
-                .addComponent(linkButton)
-
-            var job = schedule.scheduleJob(cronDate, function () {
-                client.channels.cache.get(channel).send(role, {
-                        components: [row],
-                        embed: embed.setTimestamp()
-                    })
-                    .then(msg => msg.delete({
-                        timeout: 5400000
-                    }))
-            });
-        }
-    }
+}
