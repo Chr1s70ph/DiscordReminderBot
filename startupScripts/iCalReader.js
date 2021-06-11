@@ -228,37 +228,35 @@ function todaysLessons(events, client) {
         .setAuthor(`Informationen`, client.guilds.resolve(serverID).members.resolve(botUserID).user.avatarURL())
         .setTitle('Heutige Vorlesungen')
     for (entry in events) {
+        var lessonStart = events[entry].start.toString().slice(16, 24);
+
         if (events[entry].description) {
             fooEmbed.addFields({
-                name: "day",
-                value: events[entry].day,
-                inline: true
-            }, {
                 name: "Fach",
                 value: events[entry].summary,
+                inline: true
+            }, {
+                name: "eventStart",
+                value: lessonStart,
                 inline: true
             }, {
                 name: "description",
                 value: events[entry].description,
                 inline: true
-            }, {
-                name: "eventStart",
-                value: events[entry].start,
-                inline: true
             })
 
         } else {
             fooEmbed.addFields({
-                name: "day",
-                value: events[entry].day,
-                inline: true
-            }, {
                 name: "Fach",
                 value: events[entry].summary,
                 inline: true
             }, {
                 name: "eventStart",
-                value: events[entry].start,
+                value: lessonStart,
+                inline: true
+            }, {
+                name: '‎',
+                value: '‎',
                 inline: true
             })
         }
@@ -340,16 +338,16 @@ async function filterToadaysEvents(client, today, thisWeeksEvents) {
             var event = thisWeeksEvents[entry];
             var summary = event.summary;
             //extract the subject after the "-" in the string
-            var subject = summary.split('-')[1];
+            var subject = summary.split(' - ')[1];
 
             //extract the professors Name before the "-" in the string 
-            var professor = summary.split('-')[0];
+            var professor = summary.split(' - ')[0];
 
             var link = extractZoomLinks(event.description);
 
             var time = event.start;
 
-            var cronDate = dateToCron(time, today.getDay(), event.description);
+            var cronDate = dateToCron(time, today.getDay(), summary);
 
             var role = findRole(subject, config.ids.roleIDS)
 
@@ -433,7 +431,7 @@ function extractZoomLinks(description) {
  * @param {Date} date 
  * @returns 
  */
-function dateToCron(date, weekDay, description) {
+function dateToCron(date, weekDay, summary) {
 
     var seconds = '0';
     var minutes = '55';
@@ -443,9 +441,13 @@ function dateToCron(date, weekDay, description) {
     var day = weekDay; //Extracts the weekday of the date string
 
 
-    if (description.toLowerCase().includes("(üb)"))
+    if (summary.toLowerCase().includes("(üb)")) {
 
-        var cronString = seconds + ' ' + minutes + ' ' + hour + ' ' + dayOfMonth + ' ' + month + ' ' + day;
+        minutes = '30'
+
+    }
+
+    var cronString = seconds + ' ' + minutes + ' ' + hour + ' ' + dayOfMonth + ' ' + month + ' ' + day;
 
     return cronString;
 
@@ -470,9 +472,9 @@ function dynamicEmbed(client, role, subject, professor, link) {
     if (subject.toLowerCase().includes("(ü)")) {
         courseType = "Übung";
     }
-    
+
     embedDynamic = standardEmbed(client, roleColor, subject, professor, courseType);
-    
+
     if (subject.toLowerCase().includes("(üb)")) {
         embedDynamic.setAuthor(`Übungsblatt Abgabe Reminder`)
         embedDynamic.setDescription(`Die Abgabefirst des Übungsblattes ist in 30 Minuten.`)
@@ -550,7 +552,7 @@ function findRole(subject, roles) {
 
     Object.keys(roles).forEach(function (key) {
 
-        if (subject.includes(key)) {
+        if (subject.toLowerCase().includes(key.toLowerCase())) {
 
             role = roles[key];
 
@@ -558,7 +560,6 @@ function findRole(subject, roles) {
 
     })
     return role;
-
 }
 
 function noVariableUndefined() {
