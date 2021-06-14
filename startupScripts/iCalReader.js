@@ -123,7 +123,6 @@ function getEvents(webEvents, today, events, client) {
 
                     }
 
-
                     var count = ruleOption.count;
 
                     if (count) {
@@ -216,7 +215,12 @@ function getEvents(webEvents, today, events, client) {
 
         }
 
-    client.channels.cache.get(config.ids.channelIDS.bottest).send(todaysLessons(events, client));
+
+    if (todaysLessons(events, client).fields.length > 0) {
+
+        client.channels.cache.get(config.ids.channelIDS.bottest).send(todaysLessons(events, client));
+
+    }
     console.log(events);
     return events;
 
@@ -470,14 +474,18 @@ function dynamicEmbed(client, role, subject, professor, link) {
     var courseType = "Vorlesung";
 
     if (subject.toLowerCase().includes("(ü)")) {
+
         courseType = "Übung";
+
     }
 
     embedDynamic = standardEmbed(client, roleColor, subject, professor, courseType);
 
     if (subject.toLowerCase().includes("(üb)")) {
-        embedDynamic.setAuthor(`Übungsblatt Abgabe Reminder`)
-        embedDynamic.setDescription(`Die Abgabefirst des Übungsblattes ist in 30 Minuten.`)
+
+        embedDynamic.setAuthor(`Übungsblatt Abgabe Reminder`);
+        embedDynamic.setDescription(`Die Abgabefrist läuft n 30 min ab`);
+
     }
 
     if (link) {
@@ -586,25 +594,26 @@ function noVariableUndefined() {
  * @param {string} channel destination channel for message
  * @param {string} role role what is supposed to be pinged
  * @param {object} embed embed what is sent
+ * @param {string} link link of event
  * @param {object} client required by discord.js
  */
 function createCron(cronDate, channel, role, embed, link, client) {
+
     if (!validUrl.isUri(link)) {
+
         var job = schedule.scheduleJob(cronDate, function () {
             client.channels.cache.get(channel).send(role, embed.setTimestamp())
                 .then(msg => msg.delete({
                     timeout: 5400000
                 }))
         });
+
     } else {
-        let linkButton = new MessageButton()
-            .setStyle('url')
-            .setLabel('In Zoom öffnen')
-            .setURL(link)
-            .setEmoji('776402157334822964')
+
+        let Button = embedButton(link);
 
         let row = new MessageActionRow()
-            .addComponent(linkButton)
+            .addComponent(Button)
 
         var job = schedule.scheduleJob(cronDate, function () {
             client.channels.cache.get(channel).send(role, {
@@ -615,5 +624,88 @@ function createCron(cronDate, channel, role, embed, link, client) {
                     timeout: 5400000
                 }))
         });
+
+    }
+
+}
+
+/**
+ * 
+ * @param {string} link link of event
+ * @returns button for event
+ */
+function embedButton(link) {
+
+    let linkButton = new MessageButton()
+        .setStyle('url')
+        .setURL(link)
+
+    var label = findButtonLabel(link);
+    if (label) {
+
+        linkButton.setLabel(label);
+
+    }
+
+    var emojiID = findButtonEmoji(link);
+    if (emojiID) {
+
+        linkButton.setEmoji(emojiID);
+
+    }
+
+    return linkButton;
+
+}
+
+/**
+ * 
+ * @param {string} link link of event
+ * @returns emojiID
+ */
+function findButtonEmoji(link) {
+
+    link = link.toLowerCase();
+
+    if (link.includes("ilias")) {
+
+        return "853611125114273862";
+
+    } else if (link.includes("zoom")) {
+
+        return "853610909031989288";
+
+    } else if (link.includes("teams")) {
+
+        return "853610790351536128";
+
+    }
+}
+
+/**
+ * 
+ * @param {string} link link of event
+ * @returns string to be displayed on button
+ */
+function findButtonLabel(link) {
+
+    link = link.toLowerCase();
+
+    if (link.includes("ilias")) {
+
+        return "Im Ilias öffnen";
+
+    } else if (link.includes("zoom")) {
+
+        return "In Zoom öffnen";
+
+    } else if (link.includes("teams")) {
+
+        return "In Teams öffnen";
+
+    } else {
+
+        return "Im Browser öffnen";
+
     }
 }
