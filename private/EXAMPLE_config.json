@@ -1,0 +1,46 @@
+{
+    "prefix": "YOUR PREFIX HERE",
+    "presence": {
+        "0": {
+            "name": "STATUS 0",
+            "activity": {
+                "name": "SOME TEXT",
+                "type": "PLAYING"
+            }
+        },
+        "1": {
+            "name": "STATUS 1",
+            "activity": {
+                "name": "SOME OTHER TEXT",
+                "type": "LISTENING"
+            }
+        }
+    },
+    "ids": {
+        "serverID": "YOUR SERVER-ID HERE",
+        "channelIDS": {
+            "bottest": "YOUR BOT-TEST-CHANNEL-ID HERE",
+            "subject": {
+                "SUBJECT1": "SUBJECT1 Channel ID",
+                "SUBJECT2": "SUBJECT2 Channel ID"
+            }
+
+        },
+        "userIDS": {
+            "botUserID": "USER-ID of the Bot"
+        },
+        "roleIDS": {
+            "adminRole": "ROLE ID",
+            "developer": "ROLE ID",
+
+
+            "SUBJECT1": "SUBJECT1 Role ID",
+            "SUBJECT2": "SUBJECT2 Role ID"
+        }
+
+    },
+    "calendars": {
+        "CALENDAR NAME": "LINK TO ICAL"
+    },
+    "botToken": "YOUR BOT TOKEN HERE"
+}
