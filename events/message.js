@@ -6,7 +6,7 @@ exports.run = async (client, message) => {
 	if (message.author.bot) return;
 	//check if user has the right permissions
 	if (message.content.startsWith(prefix)) {
-		if (!(message.member._roles.find(role => role == config.ids.roleIDS.adminRole))) return message.reply('You do not have the permissions to perform that command.');
+		if (!(message.member._roles.find(role => role == config.ids.roleIDS.adminRole || role == config.ids.roleIDS.developer))) return message.reply('You do not have the permissions to perform that command.');
 		let messageArray = message.content.split(" "),
 			cmd = messageArray[0],
 			args = messageArray.slice(1),
