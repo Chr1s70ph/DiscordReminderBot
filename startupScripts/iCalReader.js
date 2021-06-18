@@ -484,7 +484,7 @@ function dynamicEmbed(client, role, subject, professor, link) {
     if (subject.toLowerCase().includes("(üb)")) {
 
         embedDynamic.setAuthor(`Übungsblatt Abgabe Reminder`);
-        embedDynamic.setDescription(`Die Abgabefrist läuft n 30 min ab`);
+        embedDynamic.setDescription(`Die Abgabefrist läuft in 30 min ab`);
 
     }
 
