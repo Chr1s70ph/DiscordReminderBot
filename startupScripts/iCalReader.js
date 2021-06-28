@@ -133,7 +133,7 @@ function getEvents(webEvents, today, events, client) {
                             //retuns days until last day of webEvent based on interval
                             var daysInWeek = 7;
                             var intervalEndDate = new Date(eventStart);
-                            intervalEndDate.setDate(intervalEndDate.getDate() + daysInWeek * intervallModifier * count)
+                            intervalEndDate.setDate(intervalEndDate.getDate() + daysInWeek * intervallModifier * (count - 1))
 
                             if (amountOfDaysDifference(today, intervalEndDate) == 0) {
 
