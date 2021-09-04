@@ -9,19 +9,35 @@ var botUserID = config.ids.userIDS.botUserID
 var embed = ""
 const { DateTime } = require("luxon")
 const cron_to_fetch_new_notifications = "0 0 * * *"
-const { MessageButton, MessageActionRow } = require("discord-buttons")
 
 exports.run = async (client) => {
-	schedule.scheduleJob(cron_to_fetch_new_notifications, async function () {
-		var today = localDate()
+	fetchAndSend(client)
 
-		for (entry in config.calendars) {
-			var events = {}
-			var webEvents = await ical.async.fromURL(config.calendars[entry])
-			var eventsFromIcal = await getEvents(webEvents, today, events, client)
-			await filterToadaysEvents(client, today, eventsFromIcal)
-		}
+	schedule.scheduleJob(cron_to_fetch_new_notifications, async function () {
+		fetchAndSend(client)
+		let markdownType = "yaml"
+		let calendarList = Object.keys(config.calendars).toString()
+		let calendars = calendarList.replaceAll(",", "\n")
+		//create embed for each new fetch
+		var updatedCalendars = new discord.MessageEmbed()
+			.setColor("#C7BBED")
+			.setAuthor(client.user.tag, client.user.avatarURL())
+			.setDescription(
+				`**Kalender nach Events durchgesucht**\`\`\`${markdownType}\n${calendars} \`\`\``
+			)
+		client.channels.cache.get(config.ids.channelIDS.bottest).send(updatedCalendars) //sends login embed to channel
 	})
+}
+
+async function fetchAndSend(client) {
+	var today = localDate()
+
+	for (entry in config.calendars) {
+		var events = {}
+		var webEvents = await ical.async.fromURL(config.calendars[entry])
+		var eventsFromIcal = await getEvents(webEvents, today, events, client)
+		await filterToadaysEvents(client, today, eventsFromIcal)
+	}
 }
 
 function localDate() {
@@ -493,7 +509,7 @@ function createCron(cronDate, channel, role, embed, link, client) {
 		var job = schedule.scheduleJob(cronDate, function () {
 			client.channels.cache
 				.get(channel)
-				.send(role, embed.setTimestamp())
+				.send({ content: role, embeds: [embed.setTimestamp()] })
 				.then((msg) =>
 					msg.delete({
 						timeout: 5400000
@@ -501,17 +517,10 @@ function createCron(cronDate, channel, role, embed, link, client) {
 				)
 		})
 	} else {
-		let Button = embedButton(link)
-
-		let row = new MessageActionRow().addComponent(Button)
-
 		var job = schedule.scheduleJob(cronDate, function () {
 			client.channels.cache
 				.get(channel)
-				.send(role, {
-					components: [row],
-					embed: embed.setTimestamp()
-				})
+				.send({ content: role, embeds: [embed.setTimestamp()] })
 				.then((msg) =>
 					msg.delete({
 						timeout: 5400000

@@ -60,5 +60,5 @@ exports.run = async (client) => {
 			"https://image.flaticon.com/icons/png/512/888/888879.png"
 		)
 
-	client.channels.cache.get(config.ids.channelIDS.bottest).send(loginMessage) //sends login embed to channel
+	client.channels.cache.get(config.ids.channelIDS.bottest).send({ embeds: [loginMessage] }) //sends login embed to channel
 }
