@@ -92,7 +92,7 @@ exports.run = async (client, message, args, applications = defaultApplications) 
 		}
 		throw new SyntaxError("Invalid option !")
 	}
-	message.channel.send({
+	message.reply({
 		content: returnData.code,
 		embeds: [
 			new discord.MessageEmbed().setDescription(
