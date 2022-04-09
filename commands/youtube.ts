@@ -18,7 +18,7 @@ exports.run = async (client, message: Message) => {
 	})
 
 	try {
-		const stream = await ytdl("https://www.youtube.com/watch?v=thd6h-ZZIfo", {
+		const stream = await ytdl("https://www.youtube.com/watch?v=EMjYgK4j5z4", {
 			// highWaterMark: 1 << 25,
 			filter: "audioandvideo"
 		})
