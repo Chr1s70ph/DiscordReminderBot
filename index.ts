@@ -1,6 +1,7 @@
-const schedule = require("node-schedule")
-const config = require("./private/config.json")
-const discord = require("./node_modules/discord.js")
+import * as schedule from "node-schedule"
+import * as config from "./private/config.json"
+import * as discord from "discord.js"
+import { DiscordClient } from "./types/customTypes"
 const client = new discord.Client({
 	intents: [
 		discord.Intents.FLAGS.GUILDS,
@@ -11,20 +12,20 @@ const client = new discord.Client({
 		discord.Intents.FLAGS.GUILD_INVITES,
 		discord.Intents.FLAGS.GUILD_VOICE_STATES
 	]
-})
-const fs = require("fs")
+}) as DiscordClient
+import * as fs from "fs"
 const presence_refresh_timer = "15 * * * * *"
 
 client.commands = new discord.Collection()
-client.aliases = new discord.Collection()
-client.events = new discord.Collection()
+client.interactions = new discord.Collection()
+client.config = config
 
 client.on("ready", () => {
 	Presence()
 	foo(client)
 })
 
-async function foo(client) {
+async function foo(client: DiscordClient) {
 	await loadScripts(client)
 	console.log("Online!")
 }
@@ -64,7 +65,7 @@ fs.readdir("./commands/", (err, elements) => {
  * @param {Object} client
  */
 function setCommands(path, file, client) {
-	if (!file.endsWith(".js")) return
+	if (!file.endsWith(".ts")) return
 	let props = require(`${path}${file}`)
 	console.log("Successfully loaded command " + file)
 	let commandName = file.split(".")[0]
@@ -89,7 +90,7 @@ fs.readdir("./events/", (err, files) => {
  *
  * @param {object} client necessary to start scripts relying on client
  */
-async function loadScripts(client) {
+async function loadScripts(client: DiscordClient) {
 	let files
 	try {
 		files = await fs.promises.readdir("./startupScripts/")
