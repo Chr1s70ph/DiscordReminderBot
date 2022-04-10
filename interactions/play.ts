@@ -9,7 +9,7 @@ import ytdl from "ytdl-core-discord"
 import { DiscordClient, DiscordCommandInteraction } from "../types/customTypes"
 
 export const data = new SlashCommandBuilder()
-	.setName("youtube")
+	.setName("play")
 	.setDescription("Prüft, ob der Bot ordnungsgemäß antwortet")
 	.addStringOption((option) =>
 		option
